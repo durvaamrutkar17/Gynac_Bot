@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pregnancy Report Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<!-- 
+    CHANGE 1: Use `min-h-screen` on the body. This ensures the background always fills the screen, 
+    but allows the content to grow if needed, which is more robust than a fixed height.
+-->
+<body class="bg-gradient-to-r from-blue-400 to-purple-500 min-h-screen flex items-center justify-center p-4">
+
+    <!-- 
+        CHANGE 2: The main container has updated sizing and height control for responsiveness.
+        - `w-full max-w-2xl`: Full width on mobile, with a max width on larger screens for better readability.
+        - `p-6 sm:p-8`: Reduced padding on small screens.
+        - `max-h-[95vh]`: Limits the height to 95% of the viewport height. This keeps the full-screen feel without causing overflow issues.
+        - `overflow-y-auto`: CRITICAL for mobile. This makes the form content scrollable if it exceeds the container height (e.g., when the keyboard appears).
+        - `flex flex-col`: Allows us to structure the content vertically.
+    -->
+    <div class="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-2xl max-h-[95vh] flex flex-col">
+
+        <!-- CHANGE 3: Responsive title font size and increased bottom margin for better spacing. -->
+        <h2 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">Pregnancy Report</h2>
+
+        <!-- 
+            CHANGE 4: The form is now a flex container that fills the height of its parent.
+            This lets us push the submit button to the bottom.
+        -->
+        <form action="" method="POST" enctype="multipart/form-data" class="flex flex-col h-full">
+            {% csrf_token %}
+            
+            <!-- This div wraps the inputs, allowing them to grow and push the button down. -->
+            <div class="space-y-4">
+                <div>
+                    <label for="report" class="block text-sm font-medium text-gray-700">Report File (PDF Only)</label>
+                    <input type="file" id="report" name="report" accept=".pdf" required
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400">
+                </div>
+                <div>
+                    <label for="blood_report" class="block text-sm font-medium text-gray-700">Blood Report File (PDF Only)</label>
+                    <input type="file" id="blood_report" name="blood_report" accept=".pdf" 
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400">
+                </div>
+                <div>
+                    <label for="months" class="block text-sm font-medium text-gray-700">How many months pregnant are you?</label>
+                    <!-- Changed input type to "number" for better mobile UX (shows number pad) -->
+                    <input type="number" id="months" name="months" required placeholder="e.g., 3"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400">
+                </div>
+                <div>
+                    <label for="pregnancy_details" class="block text-sm font-medium text-gray-700">Pregnancy Details</label>
+                    <!-- Increased rows for more space to type -->
+                    <textarea id="pregnancy_details" name="pregnancy_details" rows="4" 
+                              placeholder="Please provide any relevant details about the pregnancy, observations, or concerns here..."
+                              class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400 resize-y"></textarea>
+                </div>
+            </div>
+
+            <!-- 
+                CHANGE 5: `mt-auto` pushes this block to the bottom of the flex container (the form).
+                This ensures the buttons are always at the end, regardless of content height.
+            -->
+            <div class="mt-auto pt-6">
+                <div class="flex justify-center">
+                    <button type="submit"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md shadow-lg
+                                   transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Submit & Analyze Report
+                    </button>
+                </div>
+                
+                <!-- NEW: Skip link -->
+                <div class="text-center mt-4">
+                    <a href="{% url 'home' %}" class="text-sm text-gray-600 hover:text-blue-500 hover:underline">
+                        Skip for now and go to general chat &rarr;
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

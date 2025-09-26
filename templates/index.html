@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Gynecology Assistant</title>
+
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind Play CDN (no build) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .bubble-user {
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      color: white;
+    }
+
+    .bubble-bot {
+      background: #e2e8f0;
+      color: #1a202c;
+    }
+
+    .animated-gradient-bg {
+      background: linear-gradient(120deg, #1e1b4b, #4338ca, #1a0d8bff, #0d3f62ff);
+      background-size: 300% 300%;
+      animation: gradient-flow 20s ease-in-out infinite;
+    }
+
+    @keyframes gradient-flow {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .my-element::-webkit-scrollbar {
+      display: none;
+    }
+
+    .my-element {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .drop-shadow-glow {
+      text-shadow: 0 0 8px rgba(255, 221, 100, 0.8), 0 0 12px rgba(255, 200, 50, 0.8);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 
+    CHANGE 1: Main container is now strictly h-screen.
+    - `h-screen`: Enforces full viewport height.
+    - `overflow-hidden`: Prevents the entire page from scrolling.
+    - `flex-col lg:flex-row`: Stacks vertically on mobile, side-by-side on large screens.
+  -->
+  <div
+    class="w-screen h-screen overflow-hidden animated-gradient-bg shadow-xl flex flex-col lg:flex-row gap-4 p-2 lg:p-4">
+
+    <!-- Bot and camera -->
+    <!-- 
+      CHANGE 2: Bot section has responsive height.
+      - `h-48`: A fixed height on mobile so it doesn't consume the screen.
+      - `lg:h-full`: Fills the full height on large screens.
+    -->
+    <div class="w-full lg:w-1/3 h-48 lg:h-full flex flex-col justify-center items-center">
+      <div
+        class="border border-gray-200/50 rounded-lg flex justify-center items-center text-white lg:h-1/2 w-full h-full">
+        Heygen Bot Area
+      </div>
+
+      <div class="relative border border-gray-200 rounded-lg bg-black w-full max-w-md mx-auto  hidden"> <!-- md:flex -->
+        <!-- Video -->
+        <video id="userCam" autoplay playsinline class="rounded-lg w-full h-64 object-cover"></video>
+
+        <!-- Buttons overlayed at bottom -->
+        <div class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2" id="cam">
+          <button onclick="cam()" class="px-4 py-2 bg-green-600 rounded-lg text-white">Start</button>
+        </div>
+      </div>
+
+
+      <script>
+        let stream; // store webcam stream globally
+
+        async function cam() {
+          const button = document.getElementById('cam'); // button element
+          const opt = button.textContent.trim(); // current text
+
+          if (opt === 'Start') {
+            button.innerHTML = `<button onclick="cam()" class="px-4 py-2 bg-red-600 rounded-lg text-white">Stop</button>`;
+
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+              const video = document.getElementById('userCam');
+              video.srcObject = stream;
+              video.play(); // start video
+            } catch (err) {
+              console.error("Error accessing webcam:", err);
+              alert("Camera access was denied or not available.");
+              button.textContent = 'Start'; // reset button
+            }
+
+          } else if (opt === 'Stop') {
+            button.innerHTML = `<button onclick="cam()" class="px-4 py-2 bg-green-600 rounded-lg text-white">Start</button>`; // change text back
+            if (stream) {
+              stream.getTracks().forEach(track => track.stop()); // stop all tracks
+              document.getElementById('userCam').srcObject = null; // clear video
+            }
+          } else {
+            alert("Unexpected state!");
+          }
+        }
+      </script>
+    </div>
+
+    <!-- Right: Chat -->
+    <!-- 
+      CHANGE 3: Chat section fills the remaining screen space.
+      - `flex-1`: CRITICAL for mobile. Makes this column take all remaining vertical space.
+      - `lg:flex-none lg:h-full`: On large screens, it reverts to a standard height model to fit its container.
+      - `min-h-0`: A necessary flexbox utility to allow scrolling children to behave correctly.
+    -->
+    <div class="w-full lg:w-2/3 flex flex-col flex-1 lg:flex-none lg:h-full min-h-0">
+
+      <!-- Header -->
+      <header class="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 sm:mb-0">Gynac Bot</h1>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="location.href='/main/details/'"
+            class="px-4 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors duration-200 text-sm sm:text-base">Pregnancy
+            Report</button>
+          <button id="newChatBtn"
+            class="px-4 py-2 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-colors duration-200 text-sm sm:text-base">New
+            Chat</button>
+          <button onclick="popupRemainder()"
+            class="px-4 py-2 bg-yellow-600 text-white font-medium rounded-xl hover:bg-yellow-700 transition-colors duration-200 text-sm sm:text-base">Reminders</button>
+          <button onclick="location.href='/accounts/logout/'"
+            class="px-4 py-2 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-colors duration-200 text-sm sm:text-base">Logout</button>
+        </div>
+      </header>
+
+      <!-- Chat container -->
+      <!-- 
+        CHANGE 4: The chat log itself now fills the space between the header and input.
+        - `flex-1`: Makes the chat log grow to fill available space.
+        - `min-h-0`: Paired with flex-1 to ensure proper sizing.
+        - `overflow-y-auto`: Makes ONLY the chat log scrollable.
+      -->
+      <div id="chat"
+        class="flex-1 min-h-0 overflow-y-auto space-y-4 p-4 bg-gray-900/20 backdrop-blur-sm rounded-xl border border-gray-200/30 shadow-inner my-element">
+        <!-- messages go here -->
+      </div>
+
+      <!-- Input + Buttons -->
+      <div class="mt-2 flex flex-col sm:flex-row items-center bg-white/90 backdrop-blur-sm p-2 rounded-xl">
+        <div class="flex-1 w-full px-1">
+          <input id="messageInput" type="text" placeholder="Type your symptoms or question..."
+            class="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all duration-200" />
+        </div>
+        <div class="flex gap-2 mt-2 sm:mt-0 sm:ml-2 w-full sm:w-auto">
+          <button id="sendBtn" onclick="sendMessage()"
+            class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors duration-200">Send</button>
+          <button id="micBtn"
+            class="flex-1 sm:flex-none px-4 py-2 rounded-xl border border-indigo-300 bg-white text-indigo-600 font-medium hover:bg-indigo-50 hover:shadow-md transition-all duration-200">🎤</button>
+          <button id="getSummaryBtn"
+            class="flex-1 sm:flex-none px-3 py-2 rounded-xl border border-indigo-300 bg-indigo-100 text-indigo-800 font-medium hover:bg-indigo-200 transition-colors duration-200">Summary</button>
+          <button id="getMedicationBtn"
+            class="flex-1 sm:flex-none px-3 py-2 rounded-xl border border-indigo-300 bg-indigo-100 text-indigo-800 font-medium hover:bg-indigo-200 transition-colors duration-200">Medication</button>
+        </div>
+      </div>
+
+      <!-- Auto-speak toggle -->
+      <div class="mt-2 flex items-center gap-2 text-sm text-white">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input id="autoSpeak" type="checkbox" class="rounded text-indigo-500 focus:ring-indigo-500" />
+          <span>Auto-speak bot replies</span>
+        </label>
+      </div>
+
+    </div>
+
+
+    <!-- Right: Reminders Panel (Modal remains scrollable, not h-screen, for best UX) -->
+    <div
+      class="w-screen fixed h-screen top-0 left-0 flex justify-center items-center hidden backdrop-blur-lg bg-black/30 p-4"
+      id="mainReminder">
+      <div
+        class="w-full sm:w-4/5 md:w-2/3 lg:w-1/2 max-h-[95vh] overflow-y-auto animated-gradient-bg text-white p-6 rounded-xl border border-emerald-200 shadow-lg my-element">
+        <!-- Remainder of modal content is unchanged as its responsive logic was already correct -->
+        <div class="flex flex-row sm:flex-row justify-between gap-3 mb-4">
+          <h3
+            class="font-bold text-sm text-white w-full cursor-pointer text-center p-2 border border-gray-200 rounded-lg"
+            id="addHead" onclick="showReminder('add')">Add Reminders</h3>
+          <h3 class="font-bold text-sm text-white w-full cursor-pointer text-center p-2" id="showHead"
+            onclick="showReminder('show')">Show Reminders</h3>
+          <button class="font-bold text-sm text-white p-2 bg-red-600 hover:bg-red-700 rounded-lg sm:w-auto px-4"
+            id="closeHead" onclick="showReminder('close')">Close</button>
+        </div>
+        <div id="addRem" class="">
+          <p class="text-sm text-white mb-4 text-center">Get voice + notification alerts.</p>
+          <div class="space-y-4">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input id="enableReminders" type="checkbox" class="rounded text-emerald-600 focus:ring-emerald-500" />
+              <span>Enable browser notifications</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input id="speakReminders" type="checkbox" class="rounded text-emerald-600 focus:ring-emerald-500"
+                checked />
+              <span>Speak reminders out loud</span>
+            </label>
+            <div class="pt-4 border-t border-emerald-200/50 space-y-4">
+              <div>
+                <div class="text-sm font-semibold text-white mb-1">Medicine (daily)</div>
+                <div class="flex gap-2">
+                  <input id="medTime" type="time"
+                    class="w-full rounded-lg px-3 py-2 border border-gray-300 text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                  <button id="addMedBtn" type="button"
+                    class="rounded-lg bg-emerald-600 text-white px-4 py-2 font-medium hover:bg-emerald-700 transition-colors duration-200">Add</button>
+                </div>
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-white mb-1">Exercise (daily)</div>
+                <div class="flex gap-2">
+                  <input id="exTime" type="time"
+                    class="w-full rounded-lg px-3 py-2 border border-gray-300 text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                  <button id="addExBtn" type="button"
+                    class="rounded-lg bg-emerald-600 text-white px-4 py-2 font-medium hover:bg-emerald-700 transition-colors duration-200">Add</button>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="text-sm font-semibold text-white mb-1">Doctor appointment (one-time)</div>
+                <input id="apptTitle" type="text" placeholder="Doctor / Clinic"
+                  class="w-full rounded-lg px-3 py-2 border border-gray-300 text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                <input id="apptWhen" type="datetime-local"
+                  class="w-full rounded-lg px-3 py-2 border border-gray-300 text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-400" />
+                <button id="addApptBtn" type="button"
+                  class="w-full rounded-lg bg-emerald-600 text-white px-4 py-2 font-medium hover:bg-emerald-700 transition-colors duration-200"
+                  onclick="">Add Appointment</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="showRem" class="hidden">
+          <div class="text-lg font-semibold text-white mb-2 text-center">
+            Scheduled Reminders
+          </div>
+          <div class="text-sm space-y-2 max-h-64 overflow-y-auto my-element">
+            <ul id="reminderList"></ul>
+          </div>
+          <div>
+            <button id="clearRemindersBtn" type="button"
+              class="mt-4 w-full text-center text-red-300 hover:text-white hover:underline transition-colors duration-200">Clear
+              all reminders</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>
+<script>
+  window.onload = function () {
+    const chat = document.getElementById('chat');
+    if (chat.lastElementChild) {
+      chat.lastElementChild.scrollIntoView({ behavior: "auto", block: "end" });
+    }
+  };
+
+  // ---------- Your Javascript remains the same and will work perfectly with this layout ----------
+  // ... (paste your entire original script here) ...
+  const CHAT_ENDPOINT = '/main/chat/';
+  const ANALYZE_SESSION_ENDPOINT = '/main/analyze-session-report/';
+  const GET_CHAT_HISTORY_ENDPOINT = '/main/get-chat-history/';
+  const CLEAR_ALL_CHAT_HISTORY_ENDPOINT = '/main/clear-all-chat-history/';
+  const chatEl = document.getElementById('chat');
+  const inputEl = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const micBtn = document.getElementById('micBtn');
+  const autoSpeakEl = document.getElementById('autoSpeak');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const getSummaryBtn = document.getElementById('getSummaryBtn');
+  const getMedicationBtn = document.getElementById('getMedicationBtn');
+  function getCsrfToken() {
+    const tokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
+    return tokenEl ? tokenEl.value : '';
+  }
+  function addMessage({ who = 'bot', text }) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'flex';
+    if (who === 'user') wrapper.classList.add('justify-end');
+    const bubble = document.createElement('div');
+    bubble.className = `max-w-[85%] p-3 rounded-2xl shadow-sm ${who === 'user' ? 'bubble-user rounded-br-none' : 'bubble-bot rounded-bl-none'}`;
+    bubble.style.whiteSpace = 'pre-wrap';
+    bubble.innerText = text;
+    wrapper.appendChild(bubble);
+    chatEl.appendChild(wrapper);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+  function speakText(text) {
+    if (!window.speechSynthesis) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+  function showReminder(opt) {
+    if (opt == 'add') {
+      document.getElementById('showRem').classList.add('hidden');
+      document.getElementById('addRem').classList.remove('hidden');
+      document.getElementById('addHead').classList.add('border', 'border-gray-200');
+      document.getElementById('showHead').classList.remove('border', 'border-gray-200');
+    } else if (opt == 'show') {
+      document.getElementById('showRem').classList.remove('hidden');
+      document.getElementById('addRem').classList.add('hidden');
+      document.getElementById('showHead').classList.add('border', 'border-gray-200');
+      document.getElementById('addHead').classList.remove('border', 'border-gray-200');
+    }
+    else if (opt == 'close') {
+      document.getElementById('mainReminder').classList.add('hidden');
+    }
+  }
+  function popupRemainder() {
+    var popupRemainder = document.getElementById('mainReminder');
+    popupRemainder.classList.remove('hidden');
+    // Default to 'add' view when opening
+    showReminder('add');
+  }
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    addMessage({ who: 'user', text });
+    inputEl.value = '';
+    addMessage({ who: 'bot', text: '...' });
+    try {
+      const url = `${CHAT_ENDPOINT}?message=${encodeURIComponent(text)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Backend error fetching chat reply.');
+      const data = await res.json();
+      chatEl.lastChild.querySelector('.bubble-bot').innerText = data.reply || 'No reply returned.';
+      scrollChatToBottom();
+      if (autoSpeakEl.checked) speakText(data.reply);
+    } catch (err) {
+      console.error("Chat error:", err);
+      chatEl.lastChild.querySelector('.bubble-bot').innerText = 'There was an error connecting to the AI. Please try again.';
+    }
+  }
+  function scrollChatToBottom() {
+    const chat = document.getElementById('chat');
+    chat.scrollTop = chat.scrollHeight;
+  }
+  async function analyzeReportWithAI(triggerType) {
+    addMessage({ who: 'user', text: `Get ${triggerType === 'summary' ? 'Report Summary' : 'Medication Suggestions'}` });
+    addMessage({ who: 'bot', text: `Getting ${triggerType} from the latest report...` });
+    try {
+      const url = `${ANALYZE_SESSION_ENDPOINT}?trigger=${triggerType}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.reply || `Backend error fetching ${triggerType}.`);
+      chatEl.removeChild(chatEl.lastChild);
+      addMessage({ who: 'bot', text: data.reply });
+      if (autoSpeakEl.checked) speakText(data.reply);
+    } catch (error) {
+      console.error(`Error getting ${triggerType}:`, error);
+      chatEl.removeChild(chatEl.lastChild);
+      addMessage({ who: 'bot', text: `Failed to get ${triggerType}: ${error.message}` });
+    }
+  }
+  async function loadChatHistory() {
+    chatEl.innerHTML = '';
+    try {
+      const res = await fetch(GET_CHAT_HISTORY_ENDPOINT);
+      if (!res.ok) throw new Error('Failed to load chat history.');
+      const data = await res.json();
+      if (data.history && data.history.length > 0) {
+        data.history.forEach(msg => addMessage(msg));
+      } else {
+        addMessage({ who: 'bot', text: `Hello! I am your AI gynecology assistant. How can I help you today?` });
+      }
+    } catch (error) {
+      console.error("Error loading chat history:", error);
+      addMessage({ who: 'bot', text: 'Could not load chat history. Please start a new conversation.' });
+    }
+  }
+  async function startNewChat() {
+    if (!confirm("Start a new chat? This will clear all messages and reports from this session.")) return;
+    try {
+      const res = await fetch(CLEAR_ALL_CHAT_HISTORY_ENDPOINT, { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() } });
+      if (!res.ok) throw new Error('Failed to clear session on backend.');
+      const data = await res.json();
+      alert(data.status);
+      loadChatHistory();
+    } catch (error) {
+      console.error("Error starting new chat:", error);
+      alert(`Failed to start new chat: ${error.message}`);
+    }
+  }
+  sendBtn.addEventListener('click', sendMessage);
+  inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+  newChatBtn.addEventListener('click', startNewChat);
+  getSummaryBtn.addEventListener('click', () => analyzeReportWithAI('summary'));
+  getMedicationBtn.addEventListener('click', () => analyzeReportWithAI('medication'));
+  let recognition;
+  if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.onstart = () => { micBtn.innerHTML = '🔴'; micBtn.classList.add('bg-red-100'); };
+    recognition.onresult = (event) => { inputEl.value = event.results[0][0].transcript; sendMessage(); };
+    recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); };
+    recognition.onend = () => { micBtn.innerHTML = '🎤'; micBtn.classList.remove('bg-red-100'); };
+    micBtn.addEventListener('click', () => recognition.start());
+  } else {
+    micBtn.disabled = true;
+    micBtn.textContent = 'N/A';
+  }
+  const reminderEls = {
+    enable: document.getElementById('enableReminders'),
+    speak: document.getElementById('speakReminders'),
+    medTime: document.getElementById('medTime'), addMed: document.getElementById('addMedBtn'),
+    exTime: document.getElementById('exTime'), addEx: document.getElementById('addExBtn'),
+    apptTitle: document.getElementById('apptTitle'), apptWhen: document.getElementById('apptWhen'), addAppt: document.getElementById('addApptBtn'),
+    list: document.getElementById('reminderList'), clearAll: document.getElementById('clearRemindersBtn')
+  };
+  let reminders = JSON.parse(localStorage.getItem('gyneAI_reminders')) || [];
+  let reminderInterval;
+  const saveReminders = () => localStorage.setItem('gyneAI_reminders', JSON.stringify(reminders));
+  const renderReminders = () => {
+    reminderEls.list.innerHTML = '';
+    if (reminders.length === 0) {
+      reminderEls.list.innerHTML = '<li class="text-gray-300 text-center italic">No reminders set.</li>';
+      return;
+    }
+    reminders.sort((a, b) => (a.type === 'appt' ? new Date(a.time) : a.time) - (b.type === 'appt' ? new Date(b.time) : b.time))
+      .forEach((r, index) => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between items-center bg-emerald-900/50 p-2 rounded-md';
+        let timeStr = r.type === 'appt' ? new Date(r.time).toLocaleString() : r.time;
+        let text = `<strong>${r.title || r.type.charAt(0).toUpperCase() + r.type.slice(1)}</strong> at ${timeStr}`;
+        li.innerHTML = `<span class="text-white text-sm">${text}</span><button data-index="${index}" class="remove-reminder text-red-400 hover:text-red-200 font-bold text-lg px-2">&times;</button>`;
+        reminderEls.list.appendChild(li);
+      });
+    document.querySelectorAll('.remove-reminder').forEach(b => b.addEventListener('click', e => {
+      reminders.splice(parseInt(e.target.dataset.index), 1);
+      saveReminders(); renderReminders();
+    }));
+  };
+  const showNotification = (title, body) => { if (reminderEls.enable.checked && Notification.permission === "granted") new Notification(title, { body }); };
+  const triggerReminder = text => { showNotification("AI Gynecology Reminder", text); if (reminderEls.speak.checked) speakText(text); };
+  const startReminderChecker = () => {
+    clearInterval(reminderInterval);
+    reminderInterval = setInterval(() => {
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      reminders.forEach(r => {
+        if (r.type === 'appt') {
+          const apptTime = new Date(r.time);
+          if (apptTime > now && (apptTime.getTime() - now.getTime()) <= 300000 && !r.notifiedPre) { // 5 mins before
+            triggerReminder(`Upcoming: ${r.title} in 5 minutes!`);
+            r.notifiedPre = true; saveReminders();
+          }
+        } else if (r.time === currentTime && !r.notified) {
+          triggerReminder(`Time for your ${r.type}!`);
+          r.notified = true; saveReminders();
+        } else if (r.time !== currentTime) { r.notified = false; } // Reset for next day
+      });
+    }, 30000);
+  };
+  reminderEls.addMed.addEventListener('click', () => { if (reminderEls.medTime.value) { reminders.push({ type: 'medicine', time: reminderEls.medTime.value, notified: false }); saveReminders(); renderReminders(); alert('Medicine reminder added!'); } });
+  reminderEls.addEx.addEventListener('click', () => { if (reminderEls.exTime.value) { reminders.push({ type: 'exercise', time: reminderEls.exTime.value, notified: false }); saveReminders(); renderReminders(); alert('Exercise reminder added!'); } });
+  reminderEls.addAppt.addEventListener('click', () => { if (reminderEls.apptTitle.value && reminderEls.apptWhen.value) { reminders.push({ type: 'appt', title: reminderEls.apptTitle.value, time: reminderEls.apptWhen.value, notifiedPre: false }); saveReminders(); renderReminders(); alert('Added Successfully'); showReminder('show') } });
+  reminderEls.clearAll.addEventListener('click', () => { if (confirm("Clear all reminders?")) { reminders = []; saveReminders(); renderReminders(); } });
+  reminderEls.enable.addEventListener('change', () => { if (reminderEls.enable.checked) Notification.requestPermission(); });
+  document.addEventListener('DOMContentLoaded', () => {
+    loadChatHistory();
+    renderReminders();
+    startReminderChecker();
+    showReminder('add'); // Set default view for reminder popup
+  });
+</script>
