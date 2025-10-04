@@ -1,0 +1,28 @@
+# Ignore virtual environment
+venv/
+
+# Ignore environment variables
+.env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore logs
+*.log
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore Python cache
+*.pyc
+*.pyo
+*.pyd
+
+# VSCode settings (optional)
+.vscode/
+
+# Ignore node modules if any frontend setup
+node_modules/
