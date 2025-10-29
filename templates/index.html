@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Shrishti.ai</title>
+
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'gradient-flow': 'gradient-flow 20s ease-in-out infinite',
+                        'fade-in': 'fade-in 0.5s ease-out forwards',
+                        'fade-in-msg': 'fade-in-msg 0.25s ease-out',
+                    },
+                    keyframes: {
+                        'gradient-flow': { '0%, 100%': { 'background-position': '0% 50%' }, '50%': { 'background-position': '100% 50%' } },
+                        'fade-in': { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+                        'fade-in-msg': { '0%': { opacity: '0', transform: 'translateY(4px)' }, '100%': { opacity: '1', transform: 'none' } },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        /* Hide scrollbar for mood selector but keep it scrollable */
+        #moodSelector::-webkit-scrollbar {
+            display: none;
+        }
+
+        #moodSelector {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .animated-gradient-bg {
+            background: linear-gradient(120deg, #e0e7ff, #f5f3ff, #e0f2fe, #f3e8ff);
+            background-size: 300% 300%;
+        }
+
+        .text-glow-indigo {
+            text-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .bubble-user-gradient {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6);
+        }
+
+        .toggle-active-desktop,
+        .toggle-active-chat-mode {
+            background-color: #6366f1;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-active-mobile {
+            color: #6366f1;
+            border-bottom: 2px solid #6366f1;
+        }
+
+        .sidenav-active {
+            background-color: #eef2ff;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+
+        .bubble-alert {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .chat-scroll {
+            scroll-behavior: smooth
+        }
+
+        .mood-selected {
+            background-color: #6366f1 !important;
+            color: white !important;
+            border-color: #4f46e5 !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+
+<body class="text-slate-800">
+    <div class="w-screen h-screen overflow-hidden animated-gradient-bg animation-gradient-flow flex flex-col">
+
+        <!-- HEADER -->
+        <header class="w-full flex-shrink-0 bg-white/60 backdrop-blur-md border-b border-white/80 shadow-sm z-20">
+            <div class="max-w-screen-2xl mx-auto flex items-center justify-between p-3 px-4">
+                <h1 class="text-2xl lg:text-3xl font-bold text-slate-800 text-glow-indigo">Shrishti<span
+                        class="text-indigo-500">.ai</span></h1>
+                <div id="desktop-toggles" class="hidden sm:flex items-center gap-4">
+                    <div class="flex items-center p-1 rounded-xl bg-slate-200/60 border border-slate-300/70">
+                        <button data-view="dashboard"
+                            class="view-toggle-desktop px-4 py-1.5 font-medium rounded-lg text-sm">Dashboard</button>
+                        <button data-view="chat"
+                            class="view-toggle-desktop px-4 py-1.5 font-medium rounded-lg text-sm">Chat</button>
+                        <button data-view="profile"
+                            class="view-toggle-desktop px-4 py-1.5 font-medium rounded-lg text-sm">Profile</button>
+                    </div>
+                    <button id="newChatBtnDesktop"
+                        class="px-4 py-2 bg-slate-100 font-medium rounded-xl hover:bg-slate-200 border text-sm">Start
+                        New</button>
+                    <button
+                        onclick="if (confirm('Are you sure you want to logout?')) { location.href='/accounts/logout/'; }"
+                        class="px-4 py-2 bg-red-100 text-red-700 font-medium rounded-xl hover:bg-red-200 border border-red-200 text-sm">
+                        Logout
+                    </button>
+                </div>
+                <button id="openSideNavBtn" class="sm:hidden p-2 -mr-2 rounded-md text-slate-600 hover:bg-slate-200/60">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 min-h-0 flex flex-col p-2 lg:p-4 pb-20 sm:pb-2 lg:pb-4 bg-white">
+
+            <!-- VIEW 1: Dashboard (Avatar + Daily Log + Reminders) -->
+            <div id="dashboardContainer"
+                class="view-container w-full h-full flex flex-col sm:flex-row rounded-2xl bg-white/50 backdrop-blur-md border border-white/80  overflow-hidden hidden">
+                <div
+                    class="h-full sm:w-full custom-scrollbar overflow-y-auto p-4 md:p-6 border-t-2 sm:border-t-0 sm:border-l-2 border-white/80">
+                    <div class="max-w-2xl mx-auto">
+                        <!-- MODIFIED: DAILY LOGGING SECTION -->
+                        <div class="mb-8">
+                            <h2 id="dailyLogTitle"
+                                class="text-xl font-bold text-glow-indigo mb-4 pb-4 border-b border-slate-200">Daily Log
+                            </h2>
+                            <div class="space-y-4">
+                                <label id="feelingTodayLabel"
+                                    class="text-sm font-semibold mb-1 block text-center sm:text-left">How are you
+                                    feeling today?</label>
+                                <div id="moodSelector"
+                                    class="flex justify-center items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+                                    <div class="grid md:grid-cols-6 grid-cols-3 gap-1">
+                                        <button data-mood="Great"
+                                            class="mood-btn flex-shrink-0 flex justify-center items-center gap-2 px-4 py-2 rounded-full border bg-white/80 text-sm font-medium hover:bg-indigo-50 transition-all">
+                                            Great</button>
+                                        <button data-mood="Good"
+                                            class="mood-btn flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-full border bg-white/80 text-sm font-medium hover:bg-indigo-50 transition-all">
+                                            Good</button>
+                                        <button data-mood="Okay"
+                                            class="mood-btn flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-full border bg-white/80 text-sm font-medium hover:bg-indigo-50 transition-all">
+                                            Okay</button>
+                                        <button data-mood="Tired"
+                                            class="mood-btn flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-full border bg-white/80 text-sm font-medium hover:bg-indigo-50 transition-all">
+                                            Tired</button>
+                                        <button data-mood="Pain/Discomfort"
+                                            class="mood-btn flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-full border bg-white/80 text-sm font-medium hover:bg-indigo-50 transition-all">
+                                            Pain</button>
+                                        <button data-mood="Stressed"
+                                            class="mood-btn flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-full border bg-white/80 text-sm font-medium hover:bg-indigo-50 transition-all">
+                                            Stressed</button>
+                                    </div>
+                                </div>
+                                <button id="logSymptomBtn"
+                                    class="w-full rounded-lg bg-indigo-500 text-white px-4 py-2.5 font-medium hover:bg-indigo-600">Log
+                                    Today's Feeling</button>
+                                <p id="logStatus" class="text-xs text-center mt-2"></p>
+                            </div>
+                        </div>
+                        <!-- REMINDERS SECTION (Unchanged) -->
+                        <div class="pt-6 border-t border-slate-200">
+                            <div class="flex flex-row justify-between items-center gap-3 mb-6">
+                                <h2 id="manageRemindersTitle" class="text-xl font-bold text-glow-indigo">Manage
+                                    Reminders</h2>
+                            </div>
+                            <div class="flex border border-slate-200 rounded-xl p-1 mb-6 bg-slate-100/80"><button
+                                    class="font-semibold text-sm w-full p-2 rounded-lg" id="addHeadBtn"
+                                    onclick="showReminder('add')">Add</button><button
+                                    class="font-semibold text-sm w-full p-2 rounded-lg" id="showHeadBtn"
+                                    onclick="showReminder('show')">View</button></div>
+                            <div id="addRem">
+                                <div class="space-y-4">
+                                    <label
+                                        class="flex items-center gap-3 cursor-pointer p-3 bg-slate-100/70 rounded-lg hover:bg-slate-200/80"><input
+                                            id="enableReminders" type="checkbox"
+                                            class="h-5 w-5 rounded text-indigo-500 focus:ring-indigo-400 border-slate-300" /><span
+                                            id="enableNotificationsLabel">Enable browser notifications</span></label>
+                                    <label
+                                        class="flex items-center gap-3 cursor-pointer p-3 bg-slate-100/70 rounded-lg hover:bg-slate-200/80"><input
+                                            id="speakReminders" type="checkbox"
+                                            class="h-5 w-5 rounded text-indigo-500 focus:ring-indigo-400 border-slate-300"
+                                            checked /><span id="speakRemindersLabel">Speak reminders out
+                                            loud</span></label>
+                                    <div class="pt-6 border-t border-slate-200 space-y-6">
+                                        <div>
+                                            <div id="medicineDailyLabel" class="text-sm font-semibold mb-2">Medicine
+                                                (Daily)</div>
+                                            <div class="mb-2"><input id="medName" type="text"
+                                                    placeholder="e.g., Folic Acid"
+                                                    class="w-full rounded-lg px-3 py-2 bg-white/80 border-slate-300 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                                            </div>
+                                            <div class="flex gap-2"><input id="medTime" type="time"
+                                                    class="w-full rounded-lg px-3 py-2 bg-white/80 border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400" /><button
+                                                    id="addMedBtn" type="button"
+                                                    class="rounded-lg bg-indigo-500 text-white px-4 py-2 font-medium hover:bg-indigo-600">Add</button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div id="exerciseDailyLabel" class="text-sm font-semibold mb-2">Exercise
+                                                (Daily)</div>
+                                            <div class="flex gap-2"><input id="exTime" type="time"
+                                                    class="w-full rounded-lg px-3 py-2 bg-white/80 border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400" /><button
+                                                    id="addExBtn" type="button"
+                                                    class="rounded-lg bg-indigo-500 text-white px-4 py-2 font-medium hover:bg-indigo-600">Add</button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div id="drinkWaterDailyLabel" class="text-sm font-semibold mb-2">Drink
+                                                Water (Daily)</div>
+                                            <div
+                                                class="flex items-center justify-between p-3 bg-white/80 rounded-lg border border-slate-300">
+                                                <div class="font-medium"><span id="waterCount">0</span> / <span
+                                                        id="waterGoal">10</span> <span id="cupsLabel">cups</span></div>
+                                                <div class="flex items-center gap-2"><button id="decWaterBtn"
+                                                        class="w-8 h-8 rounded-full bg-slate-200 font-bold text-lg hover:bg-slate-300">-</button><button
+                                                        id="incWaterBtn"
+                                                        class="w-8 h-8 rounded-full bg-indigo-500 text-white font-bold text-lg hover:bg-indigo-600">+</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-3">
+                                            <div id="appointmentOneTimeLabel" class="text-sm font-semibold">Appointment
+                                                (One-time)</div><input id="apptTitle" type="text"
+                                                placeholder="e.g., Annual Check-up"
+                                                class="w-full rounded-lg px-3 py-2 bg-white/80 border-slate-300 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400" /><input
+                                                id="apptWhen" type="datetime-local"
+                                                class="w-full rounded-lg px-3 py-2 bg-white/80 border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400" /><button
+                                                id="addApptBtn" type="button"
+                                                class="w-full rounded-lg bg-indigo-500 text-white px-4 py-2.5 font-medium hover:bg-indigo-600">Add
+                                                Appointment</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="showRem" class="hidden">
+                                <div id="scheduledRemindersTitle" class="text-lg font-semibold mb-4 text-center">
+                                    Scheduled Reminders</div>
+                                <div class="space-y-2 pr-2">
+                                    <ul id="reminderList" class="space-y-2"></ul>
+                                </div>
+                                <button id="clearRemindersBtn" type="button"
+                                    class="mt-6 w-full text-center text-red-600 hover:text-red-700 hover:underline">Clear
+                                    all</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: UNIFIED CHAT INTERFACE -->
+            <div id="chatContainer" class="view-container w-full h-full flex flex-col p-0 hidden">
+                <!-- Mode Toggle Header -->
+                <div class="flex-shrink-0 flex items-center justify-center pt-0 px-2 md:pt-0">
+                    <div class="flex items-center p-1 rounded-xl bg-slate-200/60 border border-slate-300/70">
+                        <button id="textModeBtn"
+                            class="chat-mode-toggle px-6 py-1.5 font-medium rounded-lg text-sm">Text
+                            Chat</button>
+                        <button id="liveModeBtn"
+                            class="chat-mode-toggle px-6 py-1.5 font-medium rounded-lg text-sm">Live
+                            Chat</button>
+                    </div>
+                </div>
+
+                <!-- Container for the two chat modes -->
+                <div class="flex-1 min-h-0 pt-2 px-0 sm:px-2 lg:px-4 pb-0 sm:pb-2 lg:pb-4">
+                    <!-- Text Chat Mode -->
+                    <div id="textChatView"
+                        class="w-full md:w-2/3 md:mx-auto h-full flex flex-1 flex-col rounded-2xl bg-white/50 backdrop-blur-md border border-white/80 overflow-hidden">
+                        <div id="chat" class="flex-1 min-h-0 overflow-y-auto space-y-4 p-4 custom-scrollbar">
+                            <div id="loadingHistoryText" class="text-center text-slate-500 p-4">Loading chat history...
+                            </div>
+                        </div>
+                        <div
+                            class="flex-shrink-0 bg-white/60 backdrop-blur-md p-2 border-t border-white/80 flex items-center gap-2 focus-within:border-indigo-400">
+                            <input id="messageInput" type="text" placeholder="Ask a question..."
+                                class="flex-1 w-full bg-transparent border-none px-3 py-3 focus:outline-none focus:ring-0" />
+                            <button id="micBtn" class="flex-shrink-0 p-3 rounded-full hover:bg-slate-200/60"><svg
+                                    xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                </svg></button>
+                            <button id="sendBtn"
+                                class="flex-shrink-0 p-3 rounded-full bg-indigo-500 text-white hover:bg-indigo-600 bubble-user-gradient"><svg
+                                    xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform rotate-45" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg></button>
+                        </div>
+                    </div>
+
+                    <!-- Live Chat Mode -->
+                    <div id="liveChatView"
+                        class="h-full flex flex-col md:flex-row hidden bg-slate-100/50 rounded-2xl backdrop-blur-md border border-white/80 justify-center overflow-hidden">
+                        <!-- Camera Panel -->
+                        <div id="cameraPanel" class="w-full md:w-1/2 max-w-6xl mx-auto z-10 flex-shrink-0 md:my-auto">
+                            <section class="rounded-2xl bg-white/80 border p-2 flex flex-col gap-3 shadow-sm">
+                                <video id="cameraStream" class="w-full rounded-xl border aspect-video bg-black" autoplay
+                                    muted playsinline></video>
+                                <div class="flex flex-wrap items-center justify-center gap-2 mx-auto">
+                                    <button id="toggleCameraBtn"
+                                        class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm">Start
+                                        Camera</button>
+                                    <button id="camMicToggle"
+                                        class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm">Click to ask
+                                    </button>
+                                    <label class="flex items-center gap-2 text-sm ml-auto hidden">
+                                        <input type="checkbox" id="speakAnswers" checked />
+                                        Speak answers
+                                    </label>
+                                    <div class="flex-shrink-0 flex items-center justify-center pt-0 px-2 md:pt-0">
+                                        <div
+                                            class="inline-block bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 text-sm font-medium">
+                                            <button id="showConvo"
+                                                class="chat-mode-toggle px-4 py-1.5 font-medium rounded-lg text-sm">
+                                                Show Conversation
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-slate-600 space-y-1 hidden">
+                                    <p id="visionStatus">Camera idle.</p>
+                                    <p id="camMicStatus">Mic idle.</p>
+                                </div>
+                            </section>
+                            <div id="botSpeak" class="flex justify-center text-center items-center">
+
+                            </div>
+                        </div>
+
+                        <!-- Chat Thread -->
+                        <main
+                            class="max-w-6xl md:w-1/2 mx-auto px-4 pb-4 w-full flex-1 min-h-0 relative top-0 left-0 hidden"
+                            id="convo">
+                            <section class="rounded-2xl bg-white/80 border p-4 flex flex-col h-full md:w-2/3 mx-auto">
+                                <div class="flex items-center justify-evenly pb-3 border-b flex-shrink-0">
+                                    <div class="flex-shrink-0 flex items-center justify-center pt-0 px-2 md:pt-0">
+                                        <div
+                                            class="inline-block bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 text-sm font-medium">
+                                            <button onclick="showConvoMsg()"
+                                                class="chat-mode-toggle px-4 py-1.5 font-medium rounded-lg text-sm">
+                                                close Conversation
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button id="clearChatBtn"
+                                            class="px-3 py-1.5 rounded-lg border text-sm text-slate-700 hover:bg-slate-50">Clear
+                                            chat history</button>
+                                        <span id="saveHint" class="text-xs text-slate-500 self-center hidden"></span>
+                                    </div>
+                                </div>
+                                <div id="chatList" class="chat-scroll flex-1 overflow-y-scroll pt-3 space-y-3"></div>
+                            </section>
+                        </main>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 3: Profile Panel -->
+            <div id="profileContainer"
+                class="view-container w-full h-full custom-scrollbar overflow-y-auto p-4 md:p-6 hidden">
+                <div class="max-w-3xl mx-auto">
+                    <h2 id="myHealthProfileTitle"
+                        class="text-xl font-bold text-glow-indigo mb-6 pb-4 border-b border-slate-200">My Health Profile
+                    </h2>
+                    <div id="profileContent" class="space-y-6"></div>
+                    <div id="profileLoading" class="hidden text-center text-slate-600 p-8">
+                        <p id="loadingProfileText" class="font-medium">Loading your profile...</p>
+                    </div>
+                    <div id="profileError" class="hidden text-center p-8 bg-red-50 rounded-xl border border-red-200">
+                        <p id="profileErrorText" class="font-semibold text-red-700">Could not load profile data.</p>
+                        <p id="profileErrorSubText" class="text-sm text-red-600 mt-1">Please fill out the details form
+                            to create your profile.</p>
+                        <a href="/main/details/" id="goToDetailsFormBtn"
+                            class="mt-4 inline-block bg-indigo-500 text-white px-5 py-2 rounded-lg hover:bg-indigo-600 text-sm font-medium">Go
+                            to Details Form</a>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- MOBILE BOTTOM NAVIGATION -->
+        <nav id="bottom-nav"
+            class="sm:hidden fixed bottom-0 right-0 w-full bg-white/80 backdrop-blur-md border-t border-slate-200 z-30">
+            <div class="flex justify-around items-center w-screen h-20">
+                <button data-view="dashboard"
+                    class="view-toggle-mobile flex flex-col items-center justify-center text-slate-500 w-full h-full">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z">
+                        </path>
+                    </svg>
+                    <span class="text-xs font-medium">Dashboard</span>
+                </button>
+                <button data-view="chat"
+                    class="view-toggle-mobile flex flex-col items-center justify-center text-slate-500 w-full h-full">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                        </path>
+                    </svg>
+                    <span class="text-xs font-medium">Chat</span>
+                </button>
+                <button data-view="profile"
+                    class="view-toggle-mobile flex flex-col items-center justify-center text-slate-500 w-full h-full">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    <span class="text-xs font-medium">Profile</span>
+                </button>
+            </div>
+        </nav>
+
+        <div id="confirmation-popup"
+            class="hidden fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 text-center border">
+                <h3 id="confirmStartNewTitle" class="mt-4 text-xl font-bold">Start a new session?</h3>
+                <p id="confirmStartNewSubText" class="mt-2 text-sm text-slate-600">This will clear your profile and chat
+                    history. This action cannot be undone.</p>
+                <div class="mt-6 flex justify-center gap-4"><button id="cancelBtn"
+                        onclick="document.getElementById('confirmation-popup').classList.add('hidden')"
+                        class="w-full rounded-lg bg-slate-200 px-4 py-2.5 font-semibold hover:bg-slate-300">Cancel</button><button
+                        id="confirm-btn"
+                        class="w-full rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white hover:bg-red-700">Start
+                        New</button></div>
+            </div>
+        </div>
+
+        <!-- SIDE NAVIGATION MENU -->
+        <div id="sideNavBackdrop" class="fixed inset-0 bg-black/40 z-40 hidden"></div>
+        <div id="sideNav"
+            class="fixed top-0 right-0 h-full w-72 bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+            <div class="p-4">
+                <div class="flex items-center justify-end mb-6">
+                    <button id="closeSideNavBtn" class="p-2 -mr-2 rounded-md text-slate-500 hover:bg-slate-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <hr class="my-4 border-slate-200">
+                <div class="flex flex-col gap-2">
+                    <button id="newChatBtnMobile"
+                        class="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-slate-100 text-slate-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                            </path>
+                        </svg>
+                        <span id="startNewSessionBtnText">Start New Session</span>
+                    </button>
+                    <button
+                        onclick="if (confirm('Are you sure you want to logout?')) { location.href='/accounts/logout/'; }"
+                        class="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-red-50 text-red-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                            </path>
+                        </svg>
+                        <span id="logoutBtnText">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Language and Internationalization ---
+        let currentLanguage = 'en';
+        const LANG_STRINGS = {
+            English: { dashboard: 'Dashboard', chat: 'Chat', liveChat: 'Live Chat', profile: 'Profile', startNew: 'Start New', logout: 'Logout', clickToStart: 'Click to start the Avatar', dailyLog: 'Daily Log', feelingToday: 'How are you feeling today?', feelingPlaceholder: 'e.g., Feeling a bit tired, had slight back pain.', logFeeling: "Log Today's Feeling", manageReminders: 'Manage Reminders', add: 'Add', view: 'View', enableNotifications: 'Enable browser notifications', speakReminders: 'Speak reminders out loud', medicineDaily: 'Medicine (Daily)', medNamePlaceholder: 'e.g., Folic Acid', exerciseDaily: 'Exercise (Daily)', drinkWaterDaily: 'Drink Water (Daily)', cups: 'cups', appointmentOneTime: 'Appointment (One-time)', apptPlaceholder: 'e.g., Annual Check-up', addAppointment: 'Add Appointment', scheduledReminders: 'Scheduled Reminders', noReminders: 'No reminders set.', clearAll: 'Clear all', loadingHistory: 'Loading chat history...', askQuestion: 'Ask a question...', helloHowCanIHelp: 'Hello! How can I help you today?', myHealthProfile: 'My Health Profile', loadingProfile: 'Loading your profile...', profileError: 'Could not load profile data.', profileErrorSub: 'Please fill out the details form to create your profile.', goToDetailsForm: 'Go to Details Form', more: 'More', startNewSession: 'Start New Session', confirmStartNew: 'Start a new session?', confirmStartNewSub: 'This will clear your profile and chat history. This action cannot be undone.', cancel: 'Cancel', profileBasic: 'Basic Profile', profilePregnancy: 'Pregnancy Details', profileMedical: 'Medical History', profileVitals: 'Vitals & Lifestyle', profileEmergency: 'Emergency Contact', labelName: 'Name', labelDob: 'Date of Birth', labelPhone: 'Phone', labelLocation: 'Location', labelWeeksPregnant: 'Weeks Pregnant', labelLmp: 'LMP', labelDueDate: 'Est. Due Date', labelDoctor: 'Doctor', labelGpal: 'GPAL Score', labelCSection: 'Previous C-Section', labelConditions: 'Conditions', labelDrugAllergies: 'Drug Allergies', labelFoodAllergies: 'Food Allergies', labelWeight: 'Current Weight', labelHeight: 'Height', labelDiet: 'Diet', labelActivity: 'Activity Level' },
+            Hindi: { dashboard: 'डैशबोर्ड', chat: 'चैट', liveChat: 'लाइव चैट', profile: 'प्रोफ़ाइल', startNew: 'नया शुरू करें', logout: 'लॉगआउट', clickToStart: 'अवतार शुरू करने के लिए क्लिक करें', dailyLog: 'दैनिक लॉग', feelingToday: 'आज आप कैसा महसूस कर रही हैं?', feelingPlaceholder: 'जैसे, थोड़ी थकान महसूस हो रही है, पीठ में हल्का दर्द था।', logFeeling: 'आज की भावना लॉग करें', manageReminders: 'रिमाइंडर प्रबंधित करें', add: 'जोड़ें', view: 'देखें', enableNotifications: 'ब्राउज़र सूचनाएं सक्षम करें', speakReminders: 'रिमाइंडर जोर से बोलें', medicineDaily: 'दवा (दैनिक)', medNamePlaceholder: 'जैसे, फोलिक एसिड', exerciseDaily: 'व्यायाम (दैनिक)', drinkWaterDaily: 'पानी पिएं (दैनिक)', cups: 'कप', appointmentOneTime: 'अपॉइंटमेंट (एक बार)', apptPlaceholder: 'जैसे, वार्षिक जांच', addAppointment: 'अपॉइंटमेंट जोड़ें', scheduledReminders: 'अनुसूचित रिमाइंडर', noReminders: 'कोई रिमाइंडर सेट नहीं है।', clearAll: 'सभी साफ़ करें', loadingHistory: 'चैट इतिहास लोड हो रहा है...', askQuestion: 'एक सवाल पूछें...', helloHowCanIHelp: 'नमस्ते! मैं आज आपकी कैसे मदद कर सकती हूँ?', myHealthProfile: 'मेरी स्वास्थ्य प्रोफ़ाइल', loadingProfile: 'आपकी प्रोफ़ाइल लोड हो रही है...', profileError: 'प्रोफ़ाइल डेटा लोड नहीं हो सका।', profileErrorSub: 'अपनी प्रोफ़ाइल बनाने के लिए कृपया विवरण फ़ॉर्म भरें।', goToDetailsForm: 'विवरण फ़ॉर्म पर जाएं', more: 'अधिक', startNewSession: 'नया सत्र शुरू करें', confirmStartNew: 'एक नया सत्र शुरू करें?', confirmStartNewSub: 'यह आपकी प्रोफ़ाइल और चैट इतिहास को साफ़ कर देगा। यह क्रिया पूर्ववत नहीं की जा सकती।', cancel: 'रद्द करें', profileBasic: 'मूल प्रोफ़ाइल', profilePregnancy: 'गर्भावस्था विवरण', profileMedical: 'चिकित्सा इतिहास', profileVitals: 'जीवन संकेत और जीवन शैली', profileEmergency: 'आपातकालीन संपर्क', labelName: 'नाम', labelDob: 'जन्म तिथि', labelPhone: 'फ़ोन', labelLocation: 'स्थान', labelWeeksPregnant: 'गर्भावस्था के सप्ताह', labelLmp: 'अंतिम मासिक धर्म', labelDueDate: 'अनुमानित डिलीवरी तिथि', labelDoctor: 'डॉक्टर', labelGpal: 'GPAL स्कोर', labelCSection: 'पिछला सी-सेक्शन', labelConditions: 'स्वास्थ्य स्थितियाँ', labelDrugAllergies: 'दवाओं से एलर्जी', labelFoodAllergies: 'भोजन से एलर्जी', labelWeight: 'वर्तमान वजन', labelHeight: 'ऊंचाई', labelDiet: 'आहार', labelActivity: 'गतिविधि स्तर' },
+            Hinglish: { dashboard: 'Dashboard', chat: 'Chat', liveChat: 'Live Chat', profile: 'Profile', startNew: 'Naya Start Karein', logout: 'Logout', clickToStart: 'Avatar shuru karne ke liye click karein', dailyLog: 'Daily Log', feelingToday: 'Aaj aap kaisa feel kar rahi hain?', feelingPlaceholder: 'Jaise, thodi thakaan hai, halka back pain tha.', logFeeling: 'Aaj ki Feeling Log Karein', manageReminders: 'Reminders Manage Karein', add: 'Add', view: 'View', enableNotifications: 'Browser notifications enable karein', speakReminders: 'Reminders zor se bolen', medicineDaily: 'Dawai (Daily)', medNamePlaceholder: 'Jaise, Folic Acid', exerciseDaily: 'Exercise (Daily)', drinkWaterDaily: 'Paani Piyein (Daily)', cups: 'cups', appointmentOneTime: 'Appointment (One-time)', apptPlaceholder: 'Jaise, Annual Check-up', addAppointment: 'Appointment Add Karein', scheduledReminders: 'Scheduled Reminders', noReminders: 'Koi reminders set nahi hain.', clearAll: 'Sab Clear Karein', loadingHistory: 'Chat history load ho rahi hai...', askQuestion: 'Ek sawaal poochein...', helloHowCanIHelp: 'Namaste! Main aaj aapki kaise help kar sakti hoon?', myHealthProfile: 'Meri Health Profile', loadingProfile: 'Aapki profile load ho rahi hai...', profileError: 'Profile data load nahi ho saka.', profileErrorSub: 'Apni profile banane ke liye please details form bharein.', goToDetailsForm: 'Details Form par Jayein', more: 'More', startNewSession: 'Naya Session Shuru Karein', confirmStartNew: 'Naya session shuru karein?', confirmStartNewSub: 'Isse aapki profile aur chat history clear ho jayegi. Isko undo nahi kiya ja sakta.', cancel: 'Cancel', profileBasic: 'Basic Profile', profilePregnancy: 'Pregnancy Details', profileMedical: 'Medical History', profileVitals: 'Vitals & Lifestyle', profileEmergency: 'Emergency Contact', labelName: 'Naam', labelDob: 'Janam Tithi', labelPhone: 'Phone', labelLocation: 'Location', labelWeeksPregnant: 'Pregnancy ke Hafte', labelLmp: 'LMP', labelDueDate: 'Est. Due Date', labelDoctor: 'Doctor', labelGpal: 'GPAL Score', labelCSection: 'Pichla C-Section', labelConditions: 'Conditions', labelDrugAllergies: 'Dawai se Allergy', labelFoodAllergies: 'Khane se Allergy', labelWeight: 'Current Wajan', labelHeight: 'Height', labelDiet: 'Diet', labelActivity: 'Activity Level' }
+        };
+
+        function setLanguage(lang) {
+            if (!LANG_STRINGS[lang]) lang = 'en'; // Fallback to English
+            currentLanguage = lang;
+            const strings = LANG_STRINGS[lang];
+            const textElements = {
+                'button[data-view="dashboard"].view-toggle-desktop': 'dashboard', 'button[data-view="chat"].view-toggle-desktop': 'chat', '#newChatBtnDesktop': 'startNew', '#newChatBtnDesktop + button': 'logout', '#status': 'clickToStart', '#dailyLogTitle': 'dailyLog', '#feelingTodayLabel': 'feelingToday', '#logSymptomBtn': 'logFeeling', '#manageRemindersTitle': 'manageReminders', '#addHeadBtn': 'add', '#showHeadBtn': 'view', '#enableNotificationsLabel': 'enableNotifications', '#speakRemindersLabel': 'speakReminders', '#medicineDailyLabel': 'medicineDaily', '#addMedBtn': 'add', '#exerciseDailyLabel': 'exerciseDaily', '#addExBtn': 'add', '#drinkWaterDailyLabel': 'drinkWaterDaily', '#cupsLabel': 'cups', '#appointmentOneTimeLabel': 'appointmentOneTime', '#addApptBtn': 'addAppointment', '#scheduledRemindersTitle': 'scheduledReminders', '#clearRemindersBtn': 'clearAll', '#loadingHistoryText': 'loadingHistory', '#myHealthProfileTitle': 'myHealthProfile', '#loadingProfileText': 'loadingProfile', '#profileErrorText': 'profileError', '#profileErrorSubText': 'profileErrorSub', '#goToDetailsFormBtn': 'goToDetailsForm', '#confirmStartNewTitle': 'confirmStartNew', '#confirmStartNewSubText': 'confirmStartNewSub', '#cancelBtn': 'cancel', '#confirm-btn': 'startNew', '#startNewSessionBtnText': 'startNewSession', '#logoutBtnText': 'logout',
+                'button[data-view="dashboard"].view-toggle-mobile > span': 'dashboard', 'button[data-view="chat"].view-toggle-mobile > span': 'chat', 'button[data-view="profile"].view-toggle-mobile > span': 'profile'
+            };
+            for (const selector in textElements) {
+                const el = document.querySelector(selector);
+                if (el) el.textContent = strings[textElements[selector]];
+            }
+
+            const placeholderElements = { '#medName': 'medNamePlaceholder', '#apptTitle': 'apptPlaceholder', '#messageInput': 'askQuestion' };
+            for (const selector in placeholderElements) {
+                const el = document.querySelector(selector);
+                if (el) el.placeholder = strings[placeholderElements[selector]];
+            }
+        }
+
+        // --- UI and View Management ---
+        const viewContainers = document.querySelectorAll('.view-container');
+        const desktopToggles = document.querySelectorAll('.view-toggle-desktop');
+        const newChatBtns = [document.getElementById('newChatBtnDesktop'), document.getElementById('newChatBtnMobile')];
+
+        const mobileToggles = document.querySelectorAll('.view-toggle-mobile');
+        const sideNav = document.getElementById('sideNav');
+        const sideNavBackdrop = document.getElementById('sideNavBackdrop');
+        const openSideNavBtn = document.getElementById('openSideNavBtn');
+        const closeSideNavBtn = document.getElementById('closeSideNavBtn');
+        const showConvo = document.getElementById('showConvo');
+
+        function openSideNav() {
+            sideNavBackdrop.classList.remove('hidden');
+            sideNav.classList.remove('translate-x-full');
+        }
+
+        function closeSideNav() {
+            sideNav.classList.add('translate-x-full');
+            sideNavBackdrop.classList.add('hidden');
+        }
+
+        openSideNavBtn.addEventListener('click', openSideNav);
+        closeSideNavBtn.addEventListener('click', closeSideNav);
+        sideNavBackdrop.addEventListener('click', closeSideNav);
+        showConvo.addEventListener('click', showConvoMsg);
+
+        function updateToggleStyles(activeView) {
+            desktopToggles.forEach(btn => btn.classList.toggle('toggle-active-desktop', btn.dataset.view === activeView));
+            mobileToggles.forEach(btn => btn.classList.toggle('toggle-active-mobile', btn.dataset.view === activeView));
+        }
+
+        function showConvoMsg() {
+            const convo = document.getElementById('convo')
+            const cameraPanel = document.getElementById('cameraPanel')
+            convo.classList.toggle('hidden')
+            cameraPanel.classList.toggle('hidden')
+        }
+
+        function switchView(viewName) {
+            if (viewName !== 'dashboard' && window.didAgent && typeof window.didAgent.pause === 'function') {
+                window.didAgent.pause();
+            }
+            if (viewName !== 'chat' && geminiBotInitialized) {
+                geminiStopCamera();
+            }
+
+            viewContainers.forEach(c => c.classList.add('hidden'));
+            const activeContainer = document.getElementById(`${viewName}Container`);
+            if (activeContainer) activeContainer.classList.remove('hidden');
+            updateToggleStyles(viewName);
+
+            if (viewName === 'chat') {
+                switchChatMode('text'); // Default to text chat
+                scrollChatToBottom(true);
+            }
+            if (viewName === 'profile' && !document.getElementById('profileContent').hasChildNodes()) {
+                loadAndRenderProfile();
+            }
+        }
+
+        desktopToggles.forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
+        mobileToggles.forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
+
+        // --- Chat Mode Toggle Logic ---
+        const textModeBtn = document.getElementById('textModeBtn');
+        const liveModeBtn = document.getElementById('liveModeBtn');
+        const textChatView = document.getElementById('textChatView');
+        const liveChatView = document.getElementById('liveChatView');
+
+        function switchChatMode(mode) {
+            if (mode === 'live') {
+                textChatView.classList.add('hidden');
+                liveChatView.classList.remove('hidden');
+                liveModeBtn.classList.add('toggle-active-chat-mode');
+                textModeBtn.classList.remove('toggle-active-chat-mode');
+                initGeminiBot(); // Initialize Gemini bot when switching to live mode
+            } else { // 'text' mode
+                liveChatView.classList.add('hidden');
+                textChatView.classList.remove('hidden');
+                textModeBtn.classList.add('toggle-active-chat-mode');
+                liveModeBtn.classList.remove('toggle-active-chat-mode');
+                if (geminiBotInitialized) {
+                    geminiStopCamera(); // Stop camera if user switches away from live chat
+                }
+            }
+        }
+
+        textModeBtn.addEventListener('click', () => switchChatMode('text'));
+        liveModeBtn.addEventListener('click', () => switchChatMode('live'));
+
+
+        // --- Core Application Logic ---
+        const API_ENDPOINTS = { CHAT: '/main/chat/', GET_HISTORY: '/main/get-chat-history/', CLEAR_HISTORY: '/main/clear-all-chat-history/', GET_PROFILE: '/main/get-user-profile/', LOG_SYMPTOM: '/main/log-symptom/' };
+        const chatEl = document.getElementById('chat'), inputEl = document.getElementById('messageInput'), sendBtn = document.getElementById('sendBtn'), micBtn = document.getElementById('micBtn');
+
+        function getCsrfToken() { return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1]; }
+        function addMessage({ who = 'bot', text, is_alert = false }) { const wrapper = document.createElement('div'); wrapper.className = `flex w-full ${who === 'user' ? 'justify-end' : 'justify-start'}`; const bubble = document.createElement('div'); bubble.className = `max-w-[95%] p-3 px-4 rounded-2xl shadow-md`; if (who === 'user') { bubble.classList.add('bubble-user-gradient', 'text-white', 'rounded-br-none'); } else { bubble.classList.add(is_alert ? 'bubble-alert' : 'bg-slate-200', 'text-slate-800', 'rounded-bl-none'); } bubble.style.whiteSpace = 'pre-wrap'; bubble.innerText = text; wrapper.appendChild(bubble); chatEl.appendChild(wrapper); scrollChatToBottom(); }
+        function scrollChatToBottom(instant = false) { chatEl.scrollTo({ top: chatEl.scrollHeight, behavior: instant ? 'auto' : 'smooth' }); }
+        async function sendMessage() { const text = inputEl.value.trim(); if (!text) return; addMessage({ who: 'user', text }); inputEl.value = ''; inputEl.disabled = true; sendBtn.disabled = true; addMessage({ who: 'bot', text: '● ● ●' }); try { const res = await fetch(`${API_ENDPOINTS.CHAT}?message=${encodeURIComponent(text)}&lang=${currentLanguage}`); if (!res.ok) throw new Error('Backend error'); const data = await res.json(); chatEl.lastChild.remove(); addMessage({ who: 'bot', text: data.reply, is_alert: data.is_alert || false }); } catch (err) { chatEl.lastChild.querySelector('div').innerText = 'Error connecting to the AI.'; } finally { inputEl.disabled = false; sendBtn.disabled = false; inputEl.focus(); } }
+        async function loadChatHistory() { try { const res = await fetch(API_ENDPOINTS.GET_HISTORY); const data = await res.json(); chatEl.innerHTML = ''; if (data.history?.length > 0) data.history.forEach(addMessage); else addMessage({ who: 'bot', text: LANG_STRINGS[currentLanguage].helloHowCanIHelp }); } catch (error) { addMessage({ who: 'bot', text: 'Could not load chat history.' }); } }
+        function startNewChat() { document.getElementById('confirmation-popup').classList.remove('hidden'); }
+        async function confirmNewChat() { try { await fetch(API_ENDPOINTS.CLEAR_HISTORY, { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() } }); window.location.href = '/main/details/'; } catch (error) { alert(`Failed to start new session: ${error.message}`); } }
+        sendBtn.addEventListener('click', sendMessage);
+        inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+        document.getElementById('confirm-btn').addEventListener('click', confirmNewChat);
+        newChatBtns.forEach(btn => btn.addEventListener('click', () => {
+            startNewChat();
+            closeSideNav();
+        }));
+        if ('webkitSpeechRecognition' in window) { const recognition = new webkitSpeechRecognition(); recognition.continuous = false; recognition.onresult = (e) => { inputEl.value = e.results[0][0].transcript; sendMessage(); }; recognition.onend = () => micBtn.classList.remove('bg-red-200/80'); micBtn.addEventListener('click', () => { micBtn.classList.add('bg-red-200/80'); recognition.start(); }); } else { micBtn.disabled = true; }
+
+        // MODIFIED: Daily Log Logic
+        const moodButtons = document.querySelectorAll('.mood-btn');
+        const logStatusEl = document.getElementById('logStatus');
+
+        moodButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                moodButtons.forEach(btn => btn.classList.remove('mood-selected'));
+                button.classList.add('mood-selected');
+                logStatusEl.textContent = '';
+            });
+        });
+
+        document.getElementById('logSymptomBtn').addEventListener('click', async () => {
+            const selectedMoodEl = document.querySelector('.mood-btn.mood-selected');
+            if (!selectedMoodEl) {
+                logStatusEl.textContent = "Please select a mood to log.";
+                logStatusEl.className = "text-xs text-center mt-2 text-red-600";
+                return;
+            }
+            const moodValue = selectedMoodEl.dataset.mood;
+            logStatusEl.textContent = "Logging...";
+            logStatusEl.className = "text-xs text-center mt-2 text-slate-600";
+            try {
+                const response = await fetch(API_ENDPOINTS.LOG_SYMPTOM, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                    body: JSON.stringify({ symptom: moodValue })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+                logStatusEl.textContent = result.message;
+                logStatusEl.className = "text-xs text-center mt-2 text-green-600";
+                selectedMoodEl.classList.remove('mood-selected');
+            } catch (error) {
+                logStatusEl.textContent = error.message;
+                logStatusEl.className = "text-xs text-center mt-2 text-red-600";
+            }
+            setTimeout(() => logStatusEl.textContent = '', 4000);
+        });
+
+        const profileContentEl = document.getElementById('profileContent'), profileLoadingEl = document.getElementById('profileLoading'), profileErrorEl = document.getElementById('profileError');
+        function createProfileCard(title, dataPairs) { const validPairs = dataPairs.filter(p => p.value); if (validPairs.length === 0) return ''; let contentHtml = validPairs.map(pair => `<div class="flex justify-between items-center py-2.5 border-b border-slate-200/80 last:border-b-0"><dt class="text-sm text-slate-600">${pair.label}</dt><dd class="text-sm font-medium text-slate-800 text-right">${pair.value}</dd></div>`).join(''); return `<div class="bg-white/70 rounded-xl border border-slate-200/80 shadow-sm"><h3 class="text-lg font-semibold text-indigo-700 p-4 border-b border-slate-200">${title}</h3><dl class="p-4">${contentHtml}</dl></div>`; }
+        function renderProfileDataToHtml(data) { let html = ''; const s = LANG_STRINGS[currentLanguage]; const gpal = data.gpal || {}; const conditions = Object.entries(data.conditions || {}).filter(([_, v]) => v).map(([k]) => k.charAt(0).toUpperCase() + k.slice(1)).join(', '); html += createProfileCard(s.profileBasic, [{ label: s.labelName, value: data.name }, { label: s.labelDob, value: data.dob }, { label: s.labelPhone, value: data.phone }, { label: s.labelLocation, value: `${data.location?.city || ''}, ${data.location?.pincode || ''}`.replace(/^, |, $/g, '') }]); html += createProfileCard(s.profilePregnancy, [{ label: s.labelWeeksPregnant, value: data.weeks_pregnant ? `${data.weeks_pregnant} weeks` : null }, { label: s.labelLmp, value: data.lmp }, { label: s.labelDueDate, value: data.dueDate }, { label: s.labelDoctor, value: data.doctorName }]); html += createProfileCard(s.profileMedical, [{ label: s.labelGpal, value: `G${gpal.g || '_'} P${gpal.p || '_'} A${gpal.a || '_'} L${gpal.l || '_'}` }, { label: s.labelCSection, value: data.previousCSection ? 'Yes' : 'No' }, { label: s.labelConditions, value: conditions || 'None' }, { label: s.labelDrugAllergies, value: data.allergies?.drug || 'None' }, { label: s.labelFoodAllergies, value: data.allergies?.food || 'None' }]); html += createProfileCard(s.profileVitals, [{ label: s.labelWeight, value: data.vitals?.currentWeight ? `${data.vitals.currentWeight} kg` : null }, { label: s.labelHeight, value: data.vitals?.height ? `${data.vitals.height} cm` : null }, { label: s.labelDiet, value: data.lifestyle?.diet }, { label: s.labelActivity, value: data.lifestyle?.activityLevel }]); html += createProfileCard(s.profileEmergency, [{ label: s.labelName, value: data.emergencyContact?.name }, { label: s.labelPhone, value: data.emergencyContact?.phone }]); return html; }
+        async function loadAndRenderProfile() { profileLoadingEl.classList.remove('hidden'); profileErrorEl.classList.add('hidden'); profileContentEl.innerHTML = ''; try { const response = await fetch(API_ENDPOINTS.GET_PROFILE); if (!response.ok) throw new Error('Profile data not found.'); const profileData = await response.json(); setLanguage(profileData.language || 'en'); profileContentEl.innerHTML = renderProfileDataToHtml(profileData); } catch (error) { setLanguage('en'); profileErrorEl.classList.remove('hidden'); } finally { profileLoadingEl.classList.add('hidden'); } }
+        function showReminder(opt) { const addRem = document.getElementById("addRem"), showRem = document.getElementById("showRem"), addBtn = document.getElementById("addHeadBtn"), showBtn = document.getElementById("showHeadBtn"); addBtn.classList.remove("bg-indigo-500", "text-white"); showBtn.classList.remove("bg-indigo-500", "text-white"); if (opt === "add") { showRem.classList.add("hidden"); addRem.classList.remove("hidden"); addBtn.classList.add("bg-indigo-500", "text-white") } else if (opt === "show") { addRem.classList.add("hidden"); showRem.classList.remove("hidden"); showBtn.classList.add("bg-indigo-500", "text-white") } }
+        const reminderEls = { enable: document.getElementById("enableReminders"), speak: document.getElementById("speakReminders"), medName: document.getElementById("medName"), medTime: document.getElementById("medTime"), addMed: document.getElementById("addMedBtn"), exTime: document.getElementById("exTime"), addEx: document.getElementById("addExBtn"), apptTitle: document.getElementById("apptTitle"), apptWhen: document.getElementById("apptWhen"), addAppt: document.getElementById("addApptBtn"), list: document.getElementById("reminderList"), clearAll: document.getElementById("clearRemindersBtn") }; let reminders = JSON.parse(localStorage.getItem("gyneAI_reminders")) || []; const saveReminders = () => localStorage.setItem("gyneAI_reminders", JSON.stringify(reminders)); const renderReminders = () => { reminderEls.list.innerHTML = reminders.length === 0 ? `<li class="text-slate-500 text-center italic p-4">${LANG_STRINGS[currentLanguage].noReminders}</li>` : ""; reminders.sort((a, b) => (a.type === "appt" ? new Date(a.time) : a.time) - (b.type === "appt" ? new Date(b.time) : b.time)).forEach((r, index) => { const li = document.createElement("li"); li.className = "flex justify-between items-center bg-white/80 p-3 rounded-lg border border-slate-200"; let timeStr = r.type === "appt" ? new Date(r.time).toLocaleString() : r.time; li.innerHTML = `<div class="flex flex-col"><strong class="text-indigo-600">${r.title || r.type[0].toUpperCase() + r.type.slice(1)}</strong><span class="text-xs text-slate-500">${timeStr}</span></div><button data-index="${index}" class="remove-reminder text-red-500 hover:text-red-700 font-bold text-2xl px-2">&times;</button>`; reminderEls.list.appendChild(li) }); document.querySelectorAll(".remove-reminder").forEach(b => b.onclick = e => { reminders.splice(parseInt(e.target.dataset.index), 1); saveReminders(); renderReminders() }) }; const triggerReminder = text => { if (reminderEls.enable.checked && Notification.permission === "granted") new Notification("Shrishti.ai Reminder", { body: text }); if (reminderEls.speak.checked) speechSynthesis.speak(new SpeechSynthesisUtterance(text)) }; const startReminderChecker = () => setInterval(() => { const now = new Date, currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`; reminders.forEach(r => { if (r.type === "appt") { const apptTime = new Date(r.time); if (apptTime > now && (apptTime.getTime() - now.getTime()) <= 3e5 && !r.notifiedPre) { triggerReminder(`Upcoming: ${r.title} in 5 minutes!`); r.notifiedPre = true; saveReminders() } } else if (r.time === currentTime && !r.notified) { const reminderText = r.title ? `Time to take your ${r.title}` : `Time for your ${r.type}!`; triggerReminder(reminderText); r.notified = true; saveReminders() } else if (r.time !== currentTime) r.notified = false }) }, 3e4);
+        reminderEls.addMed.onclick = () => { const medName = reminderEls.medName.value.trim(); if (reminderEls.medTime.value && medName) { reminders.push({ type: "medicine", title: medName, time: reminderEls.medTime.value }); saveReminders(); renderReminders(); alert(`${medName} reminder added!`); reminderEls.medName.value = ""; reminderEls.medTime.value = "" } else { alert("Please enter both medicine name and time.") } };
+        reminderEls.addEx.onclick = () => { if (reminderEls.exTime.value) { reminders.push({ type: "exercise", time: reminderEls.exTime.value }); saveReminders(); renderReminders(); alert("Exercise reminder added!"); reminderEls.exTime.value = "" } }; reminderEls.addAppt.onclick = () => { if (reminderEls.apptTitle.value && reminderEls.apptWhen.value) { reminders.push({ type: "appt", title: reminderEls.apptTitle.value, time: reminderEls.apptWhen.value }); saveReminders(); renderReminders(); alert("Appointment added!"); showReminder("show") } }; reminderEls.clearAll.onclick = () => { if (confirm("Clear all reminders?")) { reminders = []; saveReminders(); renderReminders() } }; reminderEls.enable.onchange = () => { if (reminderEls.enable.checked) Notification.requestPermission() };
+        const waterTrackerEls = { count: document.getElementById("waterCount"), goal: document.getElementById("waterGoal"), inc: document.getElementById("incWaterBtn"), dec: document.getElementById("decWaterBtn") }; function getWaterData() { const defaultData = { date: (new Date).toISOString().split("T")[0], count: 0, goal: 10 }; let data = JSON.parse(localStorage.getItem("gyneAI_waterTracker")) || defaultData; const today = (new Date).toISOString().split("T")[0]; if (data.date !== today) { data.date = today; data.count = 0 } return data } function saveWaterData(data) { localStorage.setItem("gyneAI_waterTracker", JSON.stringify(data)) } function renderWaterTracker() { const data = getWaterData(); waterTrackerEls.count.textContent = data.count; waterTrackerEls.goal.textContent = data.goal } function initializeWaterTracker() { renderWaterTracker(); waterTrackerEls.inc.addEventListener("click", () => { let data = getWaterData(); data.count++; saveWaterData(data); renderWaterTracker() }); waterTrackerEls.dec.addEventListener("click", () => { let data = getWaterData(); if (data.count > 0) { data.count--; saveWaterData(data); renderWaterTracker() } }) }
+        document.addEventListener('DOMContentLoaded', async () => { switchView('dashboard'); await loadAndRenderProfile(); loadChatHistory(); renderReminders(); startReminderChecker(); initializeWaterTracker(); showReminder('add'); });
+    </script>
+
+    <script>
+        // --- Gemini Bot "Live Chat" Feature ---
+        let geminiBotInitialized = false;
+        let geminiCameraStream = null;
+        let stopGeminiMic = () => { };
+
+        async function geminiStartCamera() {
+            if (geminiCameraStream) return;
+            const cameraEl = document.getElementById('cameraStream');
+            const toggleCameraBtn = document.getElementById('toggleCameraBtn');
+            const visionStatusEl = document.getElementById('visionStatus');
+            try {
+                geminiCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                cameraEl.srcObject = geminiCameraStream;
+                toggleCameraBtn.textContent = 'Stop Camera';
+                visionStatusEl.textContent = 'Camera running. Press Mic to ask about the current frame.';
+            } catch (err) {
+                visionStatusEl.textContent = 'Camera error: ' + (err?.message || err);
+            }
+        }
+
+        function geminiStopCamera() {
+            if (geminiCameraStream) {
+                geminiCameraStream.getTracks().forEach(t => t.stop());
+            }
+            geminiCameraStream = null;
+            const cameraEl = document.getElementById('cameraStream');
+            if (cameraEl) cameraEl.srcObject = null;
+            const toggleCameraBtn = document.getElementById('toggleCameraBtn');
+            if (toggleCameraBtn) toggleCameraBtn.textContent = 'Start Camera';
+            const visionStatusEl = document.getElementById('visionStatus');
+            if (visionStatusEl) visionStatusEl.textContent = 'Camera idle.';
+            stopGeminiMic();
+        }
+
+        function initGeminiBot() {
+            if (geminiBotInitialized) return;
+            geminiBotInitialized = true;
+
+            function pickVoice() {
+                const vs = speechSynthesis.getVoices();
+                return vs.find(v => /hi|hindi|india|en-IN/i.test(v.name)) || vs.find(v => /female/i.test(v.name)) || vs[0];
+            }
+            function speakText(text) {
+                const botSpeak = document.getElementById('botSpeak');
+                const speakEl = document.getElementById('speakAnswers');
+                if (!speakEl.checked || !('speechSynthesis' in window)) return;
+                try {
+                    speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance(text);
+                    const sel = pickVoice();
+                    if (sel) u.voice = sel;
+                    speechSynthesis.speak(u);
+                    botSpeak.innerHTML = 'Bot is speaking!';
+                    u.onend = () => {
+                        botSpeak.innerHTML = ''; // Clear after speaking ends
+                    };
+                } catch { }
+            }
+
+            const cameraEl = document.getElementById('cameraStream');
+            const toggleCameraBtn = document.getElementById('toggleCameraBtn');
+            const camMicToggle = document.getElementById('camMicToggle');
+            const camMicStatus = document.getElementById('camMicStatus');
+            const chatList = document.getElementById('chatList');
+            const clearChatBtn = document.getElementById('clearChatBtn');
+            const saveHint = document.getElementById('saveHint');
+            const STORAGE_KEY = 'shrishti_chat_log_v2';
+            let chat = [];
+            function loadChat() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    chat = raw ? JSON.parse(raw) : [];
+                    chatList.innerHTML = '';
+                    chat.slice(-100).forEach(renderMessage);
+                    setTimeout(() => { chatList.scrollTop = chatList.scrollHeight; }, 0);
+                } catch { chat = []; }
+            }
+            function saveChat() {
+                try {
+                    const capped = chat.slice(-100);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(capped));
+                    saveHint.textContent = `Saved ${capped.length} msgs locally`;
+                    setTimeout(() => saveHint.textContent = '', 1200);
+                } catch (e) {
+                    saveHint.textContent = 'Save failed (localStorage)';
+                    setTimeout(() => saveHint.textContent = '', 2000);
+                }
+            }
+            clearChatBtn.addEventListener('click', () => {
+                const confirmed = confirm("Are you sure you want to clear the chat?");
+                if (confirmed) {
+                    chat = [];
+                    saveChat();
+                    chatList.innerHTML = '';
+                }
+            });
+
+            function addMessage(msg) {
+                const withTs = { ...msg, ts: Date.now() };
+                chat.push(withTs);
+                renderMessage(withTs);
+                saveChat();
+            }
+
+            function formatTime(ts) {
+                try {
+                    return new Date(ts || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                } catch { return ''; }
+            }
+
+            function scrollBottom() {
+                chatList.scrollTop = chatList.scrollHeight;
+            }
+
+            function renderMessage({ who, text, audio, frame, ts }) {
+                const isUser = who === 'user';
+                const wrap = document.createElement('div');
+                wrap.className = `animate-fade-in-msg flex ${isUser ? 'justify-end' : 'justify-start'}`;
+                const bubble = document.createElement('div');
+                bubble.className = `${isUser ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800'} max-w-[85%] rounded-2xl px-3 py-2 border ${isUser ? 'border-indigo-600' : 'border-slate-200'}`;
+                const col = document.createElement('div');
+                col.className = 'flex flex-col gap-2';
+                if (isUser) {
+                    const mediaRow = document.createElement('div');
+                    mediaRow.className = 'flex items-start gap-3';
+                    if (frame) {
+                        const img = document.createElement('img');
+                        img.src = frame; img.alt = 'Frame'; img.className = 'w-28 h-16 rounded-lg object-cover border';
+                        mediaRow.appendChild(img);
+                    }
+                    if (audio) {
+                        const audioEl = document.createElement('audio');
+                        audioEl.controls = true; audioEl.src = audio; audioEl.className = 'h-8 self-center';
+                        mediaRow.appendChild(audioEl);
+                    }
+                    col.appendChild(mediaRow);
+                    const hint = document.createElement('div');
+                    hint.className = 'text-xs opacity-90'; hint.textContent = `You • ${formatTime(ts)}`;
+                    col.appendChild(hint);
+                } else {
+                    const textEl = document.createElement('div');
+                    textEl.className = 'whitespace-pre-wrap break-words text-sm'; textEl.textContent = text || '';
+                    col.appendChild(textEl);
+                    const hint = document.createElement('div');
+                    hint.className = 'text-xs opacity-60'; hint.textContent = `Bot • ${formatTime(ts)}`;
+                    col.appendChild(hint);
+                }
+                bubble.appendChild(col);
+                wrap.appendChild(bubble);
+                chatList.appendChild(wrap);
+                scrollBottom();
+            }
+
+            toggleCameraBtn.addEventListener('click', () => {
+                if (geminiCameraStream) geminiStopCamera(); else geminiStartCamera();
+            });
+
+            let camMicStream = null, camMediaRec = null, camChunks = [], camRecOn = false;
+            camMicToggle.addEventListener('click', async () => {
+                if (camRecOn) { stopCamMic(); } else { await startCamMic(); }
+            });
+            async function startCamMic() {
+                try {
+                    if (!cameraEl || !cameraEl.videoWidth) {
+                        alert("Please turn on your camera");
+                        camMicStatus.textContent = 'Turn on the camera first — a frame is required.';
+                        return;
+                    }
+                    camMicStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    const preferred = (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : undefined);
+                    camMediaRec = new MediaRecorder(camMicStream, { mimeType: preferred });
+                    camChunks = [];
+                    camMediaRec.ondataavailable = (e) => { if (e.data && e.data.size > 0) camChunks.push(e.data); };
+                    camMediaRec.onstop = async () => {
+                        try {
+                            const blob = new Blob(camChunks, { type: camMediaRec.mimeType || 'audio/webm' });
+                            camChunks = [];
+                            await askWithAudioAndFrame(blob);
+                        } catch (err) { camMicStatus.textContent = 'Mic processing error: ' + (err?.message || err); }
+                    };
+                    camMediaRec.start();
+                    camRecOn = true;
+                    camMicToggle.textContent = 'Stop asking (send)';
+                    camMicStatus.textContent = 'Listening… tap to send.';
+                } catch (err) { camMicStatus.textContent = 'Mic error: ' + (err?.message || err); }
+            }
+            function stopCamMic() {
+                try {
+                    if (camMediaRec && camMediaRec.state !== 'inactive') camMediaRec.stop();
+                    if (camMicStream) camMicStream.getTracks().forEach(t => t.stop());
+                } catch { }
+                camRecOn = false;
+                camMicToggle.textContent = 'Click to ask question';
+            }
+            stopGeminiMic = stopCamMic;
+
+            async function askWithAudioAndFrame(audioBlob) {
+                if (!cameraEl || !cameraEl.videoWidth) {
+                    camMicStatus.textContent = 'Camera is off. Turn it on to ask about the frame.';
+                    return;
+                }
+                const audioDataURL = await new Promise((resolve, reject) => {
+                    const r = new FileReader();
+                    r.onloadend = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(audioBlob);
+                });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                canvas.width = cameraEl.videoWidth;
+                canvas.height = cameraEl.videoHeight;
+                ctx.drawImage(cameraEl, 0, 0, canvas.width, canvas.height);
+                const frameDataURL = canvas.toDataURL('image/jpeg', 0.75);
+                addMessage({ who: 'user', audio: audioDataURL, frame: frameDataURL });
+                try {
+                    camMicStatus.textContent = 'Sending question with frame…';
+                    const res = await fetch('/main/gemini/send_frame/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                        body: JSON.stringify({ frame: frameDataURL, audio: audioDataURL })
+                    });
+                    if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+                    const json = await res.json();
+                    const reply = json.reply || '(no reply)';
+                    addMessage({ who: 'bot', text: reply });
+                    speakText(reply);
+                    camMicStatus.textContent = 'Answer received.';
+                } catch (e) {
+                    addMessage({ who: 'bot', text: 'Send failed: ' + (e?.message || e) });
+                    camMicStatus.textContent = 'Send failed.';
+                }
+            }
+
+            if ('speechSynthesis' in window) {
+                speechSynthesis.onvoiceschanged = () => { };
+            }
+            loadChat();
+        }
+    </script>
+</body>
+
+</html>
